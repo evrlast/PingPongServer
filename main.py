@@ -5,6 +5,8 @@ import string
 
 import websockets
 
+import config
+
 USERS = []
 letters = string.ascii_uppercase.join(string.digits)
 
@@ -120,7 +122,7 @@ async def start(websocket, path):
         unregister(websocket)
 
 
-start_server = websockets.serve(start, "192.168.0.93", 9595)
+start_server = websockets.serve(start, config.IP, config.PORT)
 
 asyncio.get_event_loop().run_until_complete(start_server)
 asyncio.get_event_loop().run_forever()
