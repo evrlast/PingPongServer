@@ -2,6 +2,7 @@ import asyncio
 import json
 import random
 import string
+import datetime
 
 import websockets
 
@@ -55,6 +56,8 @@ async def start(websocket, path):
     score = 0
 
     register(websocket)
+
+    print(datetime.datetime.now().timestamp() * 1000)
 
     try:
         await USERS[find(USERS, 'socket', websocket)]['socket'].send(
@@ -128,7 +131,7 @@ async def start(websocket, path):
     finally:
         if find(USERS, 'enemySocket', websocket) != -1:
             await USERS[find(USERS, 'enemySocket', websocket)]['socket'].send(
-                json.dumps({'leave': 'Opponent out of the game'}))
+                json.dumps({'leave': 1}))
             USERS[find(USERS, 'enemySocket', websocket)]['id'] = 0
             USERS[find(USERS, 'enemySocket', websocket)]['enemySocket'] = None
 
