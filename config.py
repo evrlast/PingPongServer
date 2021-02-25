@@ -1,2 +1,2 @@
-PORT = 8080
-IP = "localhost"
+PORT = 9595
+IP = "192.168.0.93"

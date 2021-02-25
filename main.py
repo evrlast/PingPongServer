@@ -24,7 +24,9 @@ def find(lst, key, value):
 def register(websocket):
     return USERS.append({'socket': websocket,
                          'code': ''.join(random.choice(letters) for i in range(6)),
+                         'name': '',
                          'enemySocket': None,
+                         'enemyName': '',
                          'id': 0})
 
 
@@ -67,16 +69,26 @@ async def start(websocket, path):
             dx = data.get('dx')
             goal = data.get('goal')
             code = data.get('code')
+            name = data.get('name')
+
+            if name:
+                USERS[thisUserIndex]['name'] = name
 
             if code:
-                if find(USERS, 'code', code) != -1 and find(USERS, 'code', code) != thisUserIndex:
-                    USERS[thisUserIndex]['enemySocket'] = USERS[find(USERS, 'code', code)]['socket']
+                index = find(USERS, 'code', code)
+                if index != -1 and index != thisUserIndex and USERS[index]['name'] != '':
+                    USERS[thisUserIndex]['enemySocket'] = USERS[index]['socket']
+                    USERS[thisUserIndex]['enemyName'] = USERS[index]['name']
                     USERS[thisUserIndex]['id'] = -1
 
-                    USERS[find(USERS, 'code', code)]['enemySocket'] = USERS[thisUserIndex]['socket']
-                    USERS[find(USERS, 'code', code)]['id'] = 1
+                    USERS[index]['enemySocket'] = USERS[thisUserIndex]['socket']
+                    USERS[index]['enemyName'] = USERS[thisUserIndex]['name']
+                    USERS[index]['id'] = 1
 
                     speedGenerate()
+
+                    await USERS[thisUserIndex]['socket'].send(json.dumps({'enemyName': USERS[thisUserIndex]['enemyName']}))
+                    await USERS[thisUserIndex]['enemySocket'].send(json.dumps({'enemyName': USERS[thisUserIndex]['name']}))
 
                     await USERS[thisUserIndex]['socket'].send(
                         json.dumps({'speedX': speedX / 100 * USERS[thisUserIndex]['id'],
@@ -87,10 +99,11 @@ async def start(websocket, path):
                     await USERS[thisUserIndex]['enemySocket'].send(
                         json.dumps({'speedX': speedX / 100 * enemyId,
                                     'speedY': speedY / 100 * enemyId}))
+                else:
+                    await USERS[thisUserIndex]['socket'].send(json.dumps({'codeError': 1}))
 
             if USERS[thisUserIndex]['enemySocket']:
                 if goal:
-
                     speedGenerate()
 
                     score += 1
