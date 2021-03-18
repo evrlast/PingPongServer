@@ -20,23 +20,30 @@ def find(lst, key, value):
             return i
     return -1
 
+def codeGenerator():
+    newCode = ''.join(random.choice(letters) for i in range(6))
+
+    while find(USERS, 'code', newCode) != -1:
+        newCode = ''.join(random.choice(letters) for i in range(6))
+
+    return newCode
 
 def register(websocket):
-    return USERS.append({'socket': websocket,
-                         'code': ''.join(random.choice(letters) for i in range(6)),
-                         'name': '',
-                         'id': 0,
-                         'score': 0,
-                         'isReady': False,
-                         'enemySocket': None,
-                         'enemyName': ''})
+    USERS.append({'socket': websocket,
+                  'code': '',
+                  'name': '',
+                  'id': 0,
+                  'score': 0,
+                  'isReady': False,
+                  'enemySocket': None,
+                  'enemyName': ''})
 
 
 def unregister(websocket):
     USERS.pop(find(USERS, 'socket', websocket))
 
 
-def speedGenerate():
+def speedGenerator():
     global speedX
     global speedY
 
@@ -57,8 +64,11 @@ async def start(websocket, path):
     register(websocket)
 
     try:
+        USERS[find(USERS, 'socket', websocket)]['code'] = codeGenerator()
+
         await USERS[find(USERS, 'socket', websocket)]['socket'].send(
             json.dumps({'code': USERS[find(USERS, 'socket', websocket)]['code']}))
+
         print(USERS[find(USERS, 'socket', websocket)]['code'])
 
         async for message in websocket:
@@ -71,16 +81,16 @@ async def start(websocket, path):
             code = data.get('code')
             name = data.get('name')
             back = data.get('exit')
-            play = data.get('playAgain')
+            playAgain = data.get('playAgain')
 
-            if play:
+            if playAgain:
                 index = find(USERS, 'socket', USERS[thisUserIndex]['enemySocket'])
 
                 USERS[thisUserIndex]['isReady'] = True
 
                 if USERS[thisUserIndex]['isReady'] and USERS[index]['isReady']:
                     enemyId = USERS[find(USERS, 'socket', USERS[thisUserIndex]['enemySocket'])]['id']
-                    speedGenerate()
+                    speedGenerator()
                     await USERS[thisUserIndex]['socket'].send(
                         json.dumps({'enemyName': USERS[thisUserIndex]['enemyName'],
                                     'speedX': speedX / 100 * USERS[thisUserIndex]['id'],
@@ -99,6 +109,10 @@ async def start(websocket, path):
                 USERS[thisUserIndex]['score'] = 0
                 USERS[thisUserIndex]['enemySocket'] = None
                 USERS[thisUserIndex]['enemyName'] = ''
+                USERS[thisUserIndex]['code'] = codeGenerator()
+
+                await USERS[thisUserIndex]['socket'].send(
+                    json.dumps({'code': USERS[thisUserIndex]['code']}))
 
             if name:
                 USERS[thisUserIndex]['name'] = name
@@ -117,7 +131,7 @@ async def start(websocket, path):
                     USERS[index]['id'] = 1
                     USERS[index]['isReady'] = True
 
-                    speedGenerate()
+                    speedGenerator()
 
                     await USERS[thisUserIndex]['socket'].send(
                         json.dumps({'enemyName': USERS[thisUserIndex]['enemyName']}))
@@ -140,7 +154,7 @@ async def start(websocket, path):
 
             if USERS[thisUserIndex]['isReady'] and USERS[index]['isReady']:
                 if goal:
-                    speedGenerate()
+                    speedGenerator()
 
                     USERS[thisUserIndex]['score'] += 1
 
